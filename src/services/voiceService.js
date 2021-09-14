@@ -84,7 +84,7 @@ class VoiceService {
   }
 
   async play(guildId, connection, item) {
-    if (item.from === 'spotify') {
+    if (item.from === 'spotify' || item.from === 'amazon_music') {
       const search = await this.youtubeService.search(item.title);
       if (search) {
         item.title = search.title;

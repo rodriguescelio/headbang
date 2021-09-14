@@ -34,6 +34,8 @@ class PlayCommand extends Command {
           list = await this.client.spotifyService.getTracks(args.text);
         } else if (this.client.youtubeService.isYouTube(args.text)) {
           list = await this.client.youtubeService.getTracks(args.text);
+        } else if (this.client.amazonMusicService.isAmazonMusic(args.text)) {
+          list = await this.client.amazonMusicService.getTracks(args.text);
         }
       } else {
         const search = await this.client.youtubeService.search(args.text);

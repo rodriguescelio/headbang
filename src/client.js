@@ -3,6 +3,7 @@ const { join } = require('path');
 const SpotifyService = require("./services/spotifyService");
 const VoiceService = require("./services/voiceService");
 const YoutubeService = require("./services/youtubeService");
+const AmazonMusicService = require("./services/amazonMusicService");
 
 class Client extends AkairoClient {
   constructor() {
@@ -13,6 +14,7 @@ class Client extends AkairoClient {
 
     this.spotifyService = new SpotifyService();
     this.youtubeService = new YoutubeService();
+    this.amazonMusicService = new AmazonMusicService();
 
     this.voiceService = new VoiceService(this.youtubeService);
 
