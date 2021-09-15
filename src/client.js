@@ -9,8 +9,13 @@ class Client extends AkairoClient {
   constructor() {
     super();
 
-    this.commandHandler = new CommandHandler(this, { directory: join(__dirname, 'commands'), prefix: '-', commandUtil: true });
     this.listenerHandler = new ListenerHandler(this, { directory: join(__dirname, 'listeners') });
+    this.commandHandler = new CommandHandler(this, {
+      commandUtil: true,
+      defaultCooldown: 5000,
+      directory: join(__dirname, 'commands'),
+      prefix: '-',
+    });
 
     this.spotifyService = new SpotifyService();
     this.youtubeService = new YoutubeService();

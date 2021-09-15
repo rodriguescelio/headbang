@@ -42,6 +42,8 @@ class PlayCommand extends Command {
         list = [search];
       }
 
+      list.forEach(it => (it.author = event.author.id));
+
       this.client.voiceService.enqueue(event, list, args.appendNext);
     } catch (e) {
       event.reply(e.message);

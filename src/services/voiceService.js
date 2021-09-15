@@ -1,9 +1,15 @@
+const { MessageEmbed } = require('discord.js');
+
 class VoiceService {
   constructor(youtubeService) {
     this.youtubeService = youtubeService;
     this.quitIntervals = [];
     this.connections = [];
     this.queues = [];
+  }
+
+  embed(content) {
+    return new MessageEmbed().setColor('#ff6600').setDescription(content);
   }
 
   async stablishConnection(event) {
@@ -51,7 +57,7 @@ class VoiceService {
         this.nextOnQueue(guildId);
       }
 
-      event.channel.send(`Queued ${list.length} tracks`);
+      event.channel.send(this.embed(`Queued ${list.length} tracks`));
     }
   }
 
@@ -62,7 +68,7 @@ class VoiceService {
     if (connection && queue) {
       if (queue.list.length > 0 && queue.current + 1 < queue.list.length) {
         queue.current++;
-        this.play(guildId, connection, queue.list[queue.current]);
+        this.play(guildId, connection, queue);
       } else {
         this.createQuitInterval(guildId);
       }
@@ -76,14 +82,16 @@ class VoiceService {
     if (connection && queue) {
       if (queue.list.length > 0 && queue.current > 0) {
         queue.current--;
-        this.play(guildId, connection, queue.list[queue.current]);
+        this.play(guildId, connection, queue);
       } else {
         this.createQuitInterval(guildId);
       }
     }
   }
 
-  async play(guildId, connection, item) {
+  async play(guildId, connection, queue) {
+    const item = queue.list[queue.current];
+
     if (item.from === 'spotify' || item.from === 'amazon_music') {
       const search = await this.youtubeService.search(item.title);
       if (search) {
@@ -98,7 +106,14 @@ class VoiceService {
     const readable = await this.youtubeService.getStream(item.url);
 
     connection.connection.play(readable).once('finish', () => this.nextOnQueue(guildId));
-    connection.event.channel.send(`Playing: ${item.title}`);
+
+    if (queue.messageEvent) {
+      await queue.messageEvent.delete();
+    }
+
+    queue.messageEvent = await connection.event.channel.send(
+      this.embed(`Playing: [${item.title}](${item.url}) [<@${item.author}>]`)
+    );
   }
 
   createQuitInterval(guildId) {
@@ -130,6 +145,20 @@ class VoiceService {
   getQueue(guildId) {
     const queue = this.queues.find(it => guildId === it.guildId);
     return queue || null;
+  }
+
+  shuffleQueue(guildId) {
+    let result = false;
+    const queue = this.queues.find(it => guildId === it.guildId);
+
+    if (queue && queue.list.length > 0) {
+      const currentItem = queue.list.splice(queue.current, 1);
+      queue.list.sort(() => Math.random() - 0.5);
+      queue.list.unshift(...currentItem);
+      result = true;
+    }
+
+    return result;
   }
 }
 
