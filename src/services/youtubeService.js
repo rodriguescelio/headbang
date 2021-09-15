@@ -3,6 +3,8 @@ const youtubePlaylist = require('ytpl');
 const youtube = require('ytdl-core');
 const DateTimeUtil = require('../utils/dateTimeUtil');
 
+const AUDIO_QUALITIES = ['highestaudio', 'lowestaudio'];
+
 class YoutubeService {
   isYouTube(url) {
     return url.indexOf('youtube.com') !== -1 || url.indexOf('youtu.be') !== -1;
@@ -55,7 +57,8 @@ class YoutubeService {
 
   async getStream(url) {
     if (youtube.validateURL(url)) {
-      return youtube(url, { filter: 'audioonly' });
+      const quality = AUDIO_QUALITIES.indexOf(process.env.AUDIO_QUALITY) !== -1 ? process.env.AUDIO_QUALITY : 'lowestaudio';
+      return youtube(url, { filter: 'audioonly', quality });
     } else {
       throw new Error(`Could not find any video with the url: ${url}`);
     }
