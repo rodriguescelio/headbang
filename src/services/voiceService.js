@@ -155,6 +155,7 @@ class VoiceService {
       const currentItem = queue.list.splice(queue.current, 1);
       queue.list.sort(() => Math.random() - 0.5);
       queue.list.unshift(...currentItem);
+      queue.current = 0;
       result = true;
     }
 

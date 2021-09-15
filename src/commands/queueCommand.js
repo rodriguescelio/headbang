@@ -15,7 +15,7 @@ class QueueCommand extends Command {
     this.limit = 10;
   }
 
-  async exec(event) {
+  async exec(event, _, editMessage) {
     const guildId = event.channel.guild.id;
     const queue = this.client.voiceService.getQueue(guildId);
 
@@ -45,7 +45,7 @@ class QueueCommand extends Command {
 
       const messageContent = new MessageEmbed().setColor('#ff6600').setDescription(list.join('\n'));
 
-      if (response.message) {
+      if (response.message && editMessage) {
         response.message = await response.message.edit(messageContent);
       } else {
         response.message = await event.channel.send(messageContent);
@@ -82,7 +82,7 @@ class QueueCommand extends Command {
             }
           }
 
-          this.exec(action.message);
+          this.exec(action.message, null, true);
 
           Array.from(action.users.cache.keys())
             .filter(it => it !== action.message.author.id)
