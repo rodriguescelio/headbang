@@ -44,7 +44,7 @@ class VoiceService {
 
       if (queue) {
         if (appendNext) {
-          queue.list.splice(queue.current, 0, ...list);
+          queue.list.splice(queue.current + 1, 0, ...list);
         } else {
           queue.list.push(...list);
         }
