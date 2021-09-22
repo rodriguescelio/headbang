@@ -1,6 +1,10 @@
 const { isAmazonMusic, getData } = require('amazon-music-info');
 
 class AmazonMusicService {
+  isAmazonMusic(url) {
+    return isAmazonMusic(url);
+  }
+
   async getTracks(url) {
     if (!isAmazonMusic(url)) {
       throw new Error('Invalid url');
