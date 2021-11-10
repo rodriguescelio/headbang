@@ -68,7 +68,7 @@ class VoiceService {
     if (connection && queue) {
       if (queue.list.length > 0 && queue.current + 1 < queue.list.length) {
         queue.current++;
-        this.play(guildId, connection, queue);
+        this.play(guildId, connection, queue, 0);
       } else {
         this.createQuitInterval(guildId);
       }
@@ -82,14 +82,14 @@ class VoiceService {
     if (connection && queue) {
       if (queue.list.length > 0 && queue.current > 0) {
         queue.current--;
-        this.play(guildId, connection, queue);
+        this.play(guildId, connection, queue, 0);
       } else {
         this.createQuitInterval(guildId);
       }
     }
   }
 
-  async play(guildId, connection, queue) {
+  async play(guildId, connection, queue, retries) {
     const item = queue.list[queue.current];
 
     if (item.from === 'spotify' || item.from === 'amazon_music') {
@@ -107,16 +107,31 @@ class VoiceService {
 
     connection.connection.play(readable, { fec: true })
       .once('debug', (...args) => console.log('streamDebug', args))
-      .once('error', (...args) => console.log('streamError', args))
+      .once('error', err => {
+        console.log('streamError', err);
+        if (retries < 3) {
+          this.play(guildId, connection, queue, retries + 1);
+        } else {
+          this.nextOnQueue(guildId);
+          connection.event.channel.send(
+            new MessageEmbed()
+              .setColor('#ff6600')
+              .setDescription(`Unable to play [${item.title}](${item.url}) [<@${item.author}>]`)
+              .addFields({ name: 'Error', value: err.message })
+          );
+        }
+      })
       .once('finish', () => this.nextOnQueue(guildId));
 
-    if (queue.messageEvent) {
-      await queue.messageEvent.delete();
-    }
+    if (retries === 0) {
+      if (queue.messageEvent) {
+        await queue.messageEvent.delete();
+      }
 
-    queue.messageEvent = await connection.event.channel.send(
-      this.embed(`Playing: [${item.title}](${item.url}) [<@${item.author}>]`)
-    );
+      queue.messageEvent = await connection.event.channel.send(
+        this.embed(`Playing: [${item.title}](${item.url}) [<@${item.author}>]`)
+      );
+    }
   }
 
   createQuitInterval(guildId) {
@@ -172,7 +187,7 @@ class VoiceService {
     if (connection && queue) {
       if (queueIndex > 0 && queueIndex <= queue.list.length) {
         queue.current = queueIndex - 1;
-        this.play(guildId, connection, queue);
+        this.play(guildId, connection, queue, 0);
       }
     }
   }
