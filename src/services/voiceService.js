@@ -105,7 +105,10 @@ class VoiceService {
 
     const readable = await this.youtubeService.getStream(item.url);
 
-    connection.connection.play(readable).once('finish', () => this.nextOnQueue(guildId));
+    connection.connection.play(readable, { fec: true })
+      .once('debug', (...args) => console.log('streamDebug', args))
+      .once('error', (...args) => console.log('streamError', args))
+      .once('finish', () => this.nextOnQueue(guildId));
 
     if (queue.messageEvent) {
       await queue.messageEvent.delete();
@@ -160,6 +163,18 @@ class VoiceService {
     }
 
     return result;
+  }
+
+  jumpQueueTo(guildId, queueIndex) {
+    const connection = this.connections.find(it => it.guildId === guildId);
+    const queue = this.queues.find(it => it.guildId === guildId);
+
+    if (connection && queue) {
+      if (queueIndex > 0 && queueIndex <= queue.list.length) {
+        queue.current = queueIndex - 1;
+        this.play(guildId, connection, queue);
+      }
+    }
   }
 }
 
