@@ -41,8 +41,8 @@ class YoutubeService {
   }
 
   async search(title) {
+    console.log("Linha 44 > " + title);
     const data = await youtubeSearcher(title);
-
     if (data && data.items && data.items.length) {
       return {
         from: 'youtube',

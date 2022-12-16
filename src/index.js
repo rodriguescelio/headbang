@@ -1,7 +1,12 @@
 const dotenv = require('dotenv');
-const Client = require('./client');
+const HeadBang = require('./client');
+const { join } = require('path');
 
 dotenv.config();
 
-const client = new Client();
+const client = new HeadBang({
+    prefix: '-',
+    commands: join(__dirname, 'commands'),
+});
+
 client.login(process.env.DISCORD_TOKEN);

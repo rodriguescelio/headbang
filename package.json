@@ -21,13 +21,18 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.6.0",
+    "@discordjs/voice": "^0.14.0",
     "amazon-music-info": "^1.0.5",
+    "command-line-args": "^5.2.1",
     "discord-akairo": "^8.1.0",
-    "discord.js": "^12.5.3",
+    "discord-command-parser": "^1.5.3",
+    "discord.js": "^13.6.0",
     "dotenv": "^10.0.0",
-    "spotify-url-info": "^2.2.3",
+    "isomorphic-unfetch": "^3.1.0",
+    "libsodium-wrappers": "^0.7.10",
+    "spotify-url-info": "3.1.10",
     "ytdl-core": "^4.9.1",
     "ytpl": "^2.2.3",
-    "ytsr": "^3.5.3"
+    "ytsr": "^3.8.0"
   }
 }

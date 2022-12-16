@@ -1,44 +1,45 @@
-const { Command } = require('discord-akairo');
+class PlayCommand {
 
-class PlayCommand extends Command {
-
-  constructor() {
-    super('play', {
-      aliases: ['p', 'play'],
-      separator: ' ',
-      args: [
+  constructor(client) {
+    this.client = client;
+    this.command = 'p';
+    this.args = [
         {
-          id: 'appendNext',
-          match: 'flag',
-          flag: ['-n', '-next']
+          name: 'appendNext',
+          alias: 'n',
+          type: Boolean
         },
         {
-          id: 'text',
+          name: 'text',
           type: 'rest',
+          type: String,
         },
-      ]
-    });
+      ];
   }
 
   async exec(event, args) {
     try {
-      if (!args.text) {
+      if (!args._unknown) {
         event.channel.send('Invalid command');
         return;
       }
 
       let list;
 
-      if (args.text.indexOf('https://') !== -1) {
-        if (this.client.spotifyService.isSpotify(args.text)) {
-          list = await this.client.spotifyService.getTracks(args.text);
-        } else if (this.client.youtubeService.isYouTube(args.text)) {
-          list = await this.client.youtubeService.getTracks(args.text);
-        } else if (this.client.amazonMusicService.isAmazonMusic(args.text)) {
-          list = await this.client.amazonMusicService.getTracks(args.text);
+      const unknownArg = args._unknown && args._unknown[0];
+
+      if (unknownArg.indexOf('https://') !== -1) {
+        if (this.client.spotifyService.isSpotify(unknownArg)) {
+          list = await this.client.spotifyService.getTracks(unknownArg);
+        } else if (this.client.youtubeService.isYouTube(unknownArg)) {
+          console.log('isYouTube');
+          list = await this.client.youtubeService.getTracks(unknownArg);
+        } else if (this.client.amazonMusicService.isAmazonMusic(unknownArg)) {
+          console.log('isAmazonMusic');
+          list = await this.client.amazonMusicService.getTracks(unknownArg);
         }
       } else {
-        const search = await this.client.youtubeService.search(args.text);
+        const search = await this.client.youtubeService.search(unknownArg);
         list = [search];
       }
 
@@ -46,6 +47,7 @@ class PlayCommand extends Command {
 
       this.client.voiceService.enqueue(event, list, args.appendNext);
     } catch (e) {
+      console.log(e);
       event.reply(e.message);
     }
   }

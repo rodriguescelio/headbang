@@ -1,11 +1,8 @@
-const { Command } = require('discord-akairo');
+class CleanCommand {
 
-class CleanCommand extends Command {
-
-  constructor() {
-    super('clean', {
-      aliases: ['clean'],
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'clean';
   }
 
   isBotAction(message, commands, expression) {

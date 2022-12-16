@@ -1,16 +1,14 @@
-const { Command } = require('discord-akairo');
 const { MessageEmbed } = require('discord.js');
 
 const PREV_ICON = '⬅️';
 const NEXT_ICON = '➡️';
 const ICONS = [PREV_ICON, NEXT_ICON];
 
-class QueueCommand extends Command {
+class QueueCommand {
 
-  constructor() {
-    super('queue', {
-      aliases: ['q', 'queue'],
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'q';
     this.responses = [];
     this.limit = 10;
   }
@@ -43,7 +41,7 @@ class QueueCommand extends Command {
         }
       ).filter(it => !!it);
 
-      const messageContent = new MessageEmbed().setColor('#ff6600').setDescription(list.join('\n'));
+      const messageContent = {embeds: [new MessageEmbed().setColor('#ff6600').setDescription(list.join('\n'))]};
 
       if (response.message && editMessage) {
         response.message = await response.message.edit(messageContent);
@@ -52,9 +50,34 @@ class QueueCommand extends Command {
         await this.react(response.message);
       }
 
-      this.handleReaction(response, queue.list.length);
+      // this.handleReaction(response, queue.list.length);
     } else {
       event.channel.send('Empty queue!');
+    }
+  }
+
+  async onInteraction(interaction) {
+    try {
+      if (interaction.isButton() && interaction.customId.indexOf('audiosCommand') === 0) {
+        const command = await this.client.databaseService.models.command.findOne({
+          where: { 
+            command: interaction.customId.replace('audiosCommand-', ''),
+          },
+        });
+        
+        if (command) {
+          this.saveStatistic(command.command, interaction.user.id);
+          const audio = await axios.get(command.audio, { responseType: 'arraybuffer' }).then(res => res.data);
+          await this.client.voiceService.stream(interaction, audio);
+          await interaction.deferUpdate();
+        }
+      }
+    } catch (e) {
+      if (e.request && e.response) {
+        console.error(e.response.config.url, e.response.status, e.response.data.toString('utf8'), '\n');
+      } else {
+        console.error(e.message);
+      } 
     }
   }
 

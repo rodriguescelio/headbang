@@ -1,10 +1,7 @@
-const { Command } = require('discord-akairo');
-
-class PingCommand extends Command {
-  constructor() {
-    super('ping', {
-      aliases: ['ping'] 
-    });
+class PingCommand {
+  constructor(client) {
+    this.client = client;
+    this.command = 'ping';
   }
 
   exec(message) {

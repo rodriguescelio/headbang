@@ -1,11 +1,8 @@
-const { Command } = require('discord-akairo');
+class NextCommand {
 
-class NextCommand extends Command {
-
-  constructor() {
-    super('nextOnQueue', {
-      aliases: ['n', 'next'],
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'n';
   }
 
   async exec(event) {

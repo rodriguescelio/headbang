@@ -1,4 +1,11 @@
 const { MessageEmbed } = require('discord.js');
+const {
+  AudioPlayerStatus,
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+  VoiceConnectionStatus,
+} = require('@discordjs/voice');
 
 class VoiceService {
   constructor(youtubeService) {
@@ -9,7 +16,7 @@ class VoiceService {
   }
 
   embed(content) {
-    return new MessageEmbed().setColor('#ff6600').setDescription(content);
+    return {embeds: [new MessageEmbed().setColor('#ff6600').setDescription(content)]};
   }
 
   async stablishConnection(event) {
@@ -18,7 +25,12 @@ class VoiceService {
     if (event.member.voice.channel) {
       let connection = this.connections.find(it => it.guildId === guildId);
       if (!connection) {
-        connection = await event.member.voice.channel.join();
+        const channel = event.member.voice.channel;
+        connection = joinVoiceChannel({
+          channelId: channel.id,
+          guildId: channel.guild.id,
+          adapterCreator: channel.guild.voiceAdapterCreator,
+        });
         connection.on('disconnect', () => this.handleDisconnection(guildId));
         this.connections.push({ guildId, connection, event });
       }
@@ -41,7 +53,6 @@ class VoiceService {
     if (await this.stablishConnection(event)) {
       const guildId = event.channel.guild.id;
       const queue = this.queues.find(it => it.guildId === guildId);
-
       if (queue) {
         if (appendNext) {
           queue.list.splice(queue.current + 1, 0, ...list);
@@ -56,8 +67,10 @@ class VoiceService {
         });
         this.nextOnQueue(guildId);
       }
-
-      event.channel.send(this.embed(`Queued ${list.length} tracks`));
+      console.log(`${__dirname} ::  linha: 73`)
+      // event.channel.send(this.embed(`Queued ${list.length} tracks`));
+      event.channel.send(`Queued ${list.length} tracks`);
+      console.log(`${__dirname} ::  linha: 75`, this.embed(`Queued ${list.length} tracks`))
     }
   }
 
@@ -90,8 +103,7 @@ class VoiceService {
   }
 
   async play(guildId, connection, queue, retries) {
-    const item = queue.list[queue.current];
-
+    const item = queue.list[queue.current];    
     if (item.from === 'spotify' || item.from === 'amazon_music') {
       const search = await this.youtubeService.search(item.title);
       if (search) {
@@ -103,25 +115,17 @@ class VoiceService {
       }
     }
 
+
     const readable = await this.youtubeService.getStream(item.url);
 
-    connection.connection.play(readable, { fec: true })
-      .once('debug', (...args) => console.log('streamDebug', args))
-      .once('error', err => {
-        console.log('streamError', err);
-        if (retries < 3) {
-          this.play(guildId, connection, queue, retries + 1);
-        } else {
-          this.nextOnQueue(guildId);
-          connection.event.channel.send(
-            new MessageEmbed()
-              .setColor('#ff6600')
-              .setDescription(`Unable to play [${item.title}](${item.url}) [<@${item.author}>]`)
-              .addFields({ name: 'Error', value: err.message })
-          );
-        }
-      })
-      .once('finish', () => this.nextOnQueue(guildId));
+    const audioPlayer = createAudioPlayer();
+    connection.connection.subscribe(audioPlayer);
+
+    audioPlayer.on(AudioPlayerStatus.Idle, () => {
+      this.nextOnQueue(guildId)
+    });
+
+    audioPlayer.play(createAudioResource(readable));
 
     if (retries === 0) {
       if (queue.messageEvent) {
@@ -147,7 +151,7 @@ class VoiceService {
     this.quitIntervals = this.quitIntervals.filter(it => it.guildId !== guildId);
     const connection = this.connections.find(it => it.guildId === guildId);
     if (connection) {
-      if (connection.connection.speaking.bitfield && !force) {
+      if (connection.connection.state.networking.state.connectionData && connection.connection.state.networking.state.connectionData.speaking && !force) {
         this.quitIntervals.push({
           guildId,
           interval: setTimeout(() => this.quit(guildId, false), 10000),

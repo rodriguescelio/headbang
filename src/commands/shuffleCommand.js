@@ -1,11 +1,8 @@
-const { Command } = require('discord-akairo');
+class ShuffleCommand {
 
-class ShuffleCommand extends Command {
-
-  constructor() {
-    super('shuffleQueue', {
-      aliases: ['shuffle']
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'shuffle';
   }
 
   async exec(event) {

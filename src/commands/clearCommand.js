@@ -1,11 +1,8 @@
-const { Command } = require('discord-akairo');
+class ClearCommand {
 
-class ClearCommand extends Command {
-
-  constructor() {
-    super('clearQueue', {
-      aliases: ['c', 'clear'],
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'c';
   }
 
   async exec(event) {

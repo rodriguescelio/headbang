@@ -1,11 +1,8 @@
-const { Command } = require('discord-akairo');
+class PrevCommand {
 
-class PrevCommand extends Command {
-
-  constructor() {
-    super('prevOnQueue', {
-      aliases: ['b', 'back', 'prev']
-    });
+  constructor(client) {
+    this.client = client;
+    this.command = 'b';
   }
 
   async exec(event) {

@@ -1,4 +1,5 @@
-const { getData } = require('spotify-url-info');
+const fetch = require('isomorphic-unfetch')
+const { getData, getPreview, getTracks, getDetails } = require('spotify-url-info')(fetch)
 
 class SpotifyService {
   isSpotify(url) {
@@ -17,10 +18,10 @@ class SpotifyService {
       switch (data.type) {
         case 'playlist':
           tracks.push(
-            ...data.tracks.items.map(it => ({
+            ...data.trackList.map(it => ({
               from: 'spotify',
-              title: `${it.track.name} - ${it.track.artists[0].name}`,
-              duration: Math.round(it.track.duration_ms / 1000),
+              title: `${it.title} - ${it.subtitle}`,
+              duration: Math.round(it.duration / 1000),
             }))
           );
           break;
@@ -46,6 +47,7 @@ class SpotifyService {
 
       return tracks;
     } catch (e) {
+      console.log(e);
       throw new Error(`Could not load Spotify data with this url: ${url} - ${e.message}`);
     }
   }
