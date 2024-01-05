@@ -1,0 +1,30 @@
+{
+  // This is an alias to @tsconfig/node16: https://github.com/tsconfig/bases
+  "extends": "ts-node/node16/tsconfig.json",
+
+  // Most ts-node options can be specified here using their programmatic names.
+  "ts-node": {
+    "files": true,
+    "compilerOptions": {
+    }
+  },
+  "compilerOptions": {
+    "target": "ES6",
+    "allowJs": true,
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*"]
+}
