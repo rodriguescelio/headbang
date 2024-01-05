@@ -296,13 +296,18 @@ export default class GuildQueueService extends EventEmmiter  {
       }
     }
 
-    const audio = await this.youtubeProvider!.getStream(item.youtubeMusic.url!);
+    try {
+      const audio = await this.youtubeProvider!.getStream(item.youtubeMusic.url!);
 
-    this.player?.play(createAudioResource(audio.stream, {
-      inputType: audio.type
-    }));
+      this.player?.play(createAudioResource(audio.stream, {
+        inputType: audio.type
+      }));
 
-    this.sendMessage();
+      this.sendMessage();
+    } catch (e) {
+      this.LOG.error(`Erro ao buscar stream do vídeo: ${item.youtubeMusic.url}`, e);
+      this.onPlayerIdle();
+    }
   }
 
   append(interaction: ChatInputCommandInteraction, list: Music[], appendNext: boolean) {
