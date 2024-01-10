@@ -305,7 +305,7 @@ export default class GuildQueueService extends EventEmmiter  {
 
       this.sendMessage();
     } catch (e) {
-      this.LOG.error(`Erro ao buscar stream do vídeo: ${item.youtubeMusic.url}`, e);
+      this.LOG.error(`Erro ao buscar stream do vídeo: ${(item.youtubeMusic || item.originalMusic).url}`, e);
       this.onPlayerIdle();
     }
   }
