@@ -285,18 +285,18 @@ export default class GuildQueueService extends EventEmmiter  {
   private async play() {
     const item = this.musics[this.currentMusicIndex];
 
-    if (!item.youtubeMusic) {
-      const search = await this.youtubeProvider
-        ?.search(`${item.originalMusic.title} - ${item.originalMusic.author.name}`);
-
-      if (search) {
-        item.youtubeMusic = search;
-      } else {
-        return this.next();
-      }
-    }
-
     try {
+      if (!item.youtubeMusic) {
+        const search = await this.youtubeProvider
+          ?.search(`${item.originalMusic.title} - ${item.originalMusic.author.name}`);
+
+          if (search) {
+            item.youtubeMusic = search;
+          } else {
+            throw new Error("Video não encontrado");
+          }
+      }
+
       const audio = await this.youtubeProvider!.getStream(item.youtubeMusic.url!);
 
       this.player?.play(createAudioResource(audio.stream, {
