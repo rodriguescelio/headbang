@@ -1,4 +1,4 @@
-import { ButtonInteraction, ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember } from "discord.js";
+import { ButtonInteraction, ChatInputCommandInteraction, EmbedBuilder, GuildMember } from "discord.js";
 import { autoInjectable } from "tsyringe";
 import QueueManagerService from "../services/queueManagerService";
 import TracksResult from "../types/tracksResult";
@@ -35,6 +35,29 @@ export default class PlayCommand {
     this.providers = [youtubeProvider, spotifyProvider, deezerProvider];
   }
 
+  private isEasterEgg(interaction: ChatInputCommandInteraction, tracks: TracksResult, originalUrl: string): boolean {
+    if (process.env.LOFI_EASTEREGG_ENABLE === "true" && process.env.LOFI_EASTEREGG_IMAGE) {
+      let name = null;
+
+      if (tracks.isPlaylist) {
+        name = (tracks.result as Playlist).title.toLowerCase();
+      } else {
+        name = (tracks.result as Music).title.toLowerCase();
+      }
+
+      const isLoFi = name.replace(/[\s-]/g, '').indexOf('lofi') !== -1 
+                      && !(new URLSearchParams(originalUrl).has('well'));
+
+      if (isLoFi) {
+        interaction.followUp(process.env.LOFI_EASTEREGG_IMAGE);
+      }
+
+      return isLoFi;
+    }
+
+    return false;
+  }
+
   async exec(interaction: ChatInputCommandInteraction, appendNext?: boolean) {
     await interaction.deferReply({ fetchReply: true });
 
@@ -48,6 +71,10 @@ export default class PlayCommand {
       }
 
       const tracks: TracksResult = await provider.getTracks(value);
+
+      if (this.isEasterEgg(interaction, tracks, value)) {
+        return;
+      }
 
       const items = tracks.isPlaylist 
         ? (tracks.result as Playlist).items
