@@ -1,26 +1,32 @@
-import { ButtonInteraction, ChatInputCommandInteraction, EmbedBuilder, GuildMember } from "discord.js";
-import { autoInjectable } from "tsyringe";
-import QueueManagerService from "../services/queueManagerService";
-import TracksResult from "../types/tracksResult";
-import Playlist from "../types/playlist";
-import Music from "../types/music";
-import DateTime from "../utils/dateTime";
-import SpotifyProvider from "../providers/spotifyProvider";
-import YoutubeProvider from "../providers/youtubeProvider";
-import DeezerProvider from "../providers/deezerProvider";
+import {
+  ButtonInteraction,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  GuildMember,
+} from 'discord.js';
+import { autoInjectable } from 'tsyringe';
+import QueueManagerService from '../services/queueManagerService';
+import TracksResult from '../types/tracksResult';
+import Playlist from '../types/playlist';
+import Music from '../types/music';
+import DateTime from '../utils/dateTime';
+import SpotifyProvider from '../providers/spotifyProvider';
+import YoutubeProvider from '../providers/youtubeProvider';
+import DeezerProvider from '../providers/deezerProvider';
 
 @autoInjectable()
 export default class PlayCommand {
   trigger = {
-    name: "play",
-    description: "Reproduzir musica/playlist no canal de voz atual",
+    name: 'play',
+    description: 'Reproduzir musica/playlist no canal de voz atual',
     options: [
       {
         type: 3,
-        name: "value",
-        description: "Termo para busca ou url da musica/playlist de um dos serviços: Youtube, Spotify ou Deezer",
-        required: true
-      }
+        name: 'value',
+        description:
+          'Termo para busca ou url da musica/playlist de um dos serviços: Youtube, Spotify ou Deezer',
+        required: true,
+      },
     ],
   };
 
@@ -30,13 +36,20 @@ export default class PlayCommand {
     spotifyProvider: SpotifyProvider,
     youtubeProvider: YoutubeProvider,
     deezerProvider: DeezerProvider,
-    private queueManagerService: QueueManagerService
+    private queueManagerService: QueueManagerService,
   ) {
     this.providers = [youtubeProvider, spotifyProvider, deezerProvider];
   }
 
-  private isEasterEgg(interaction: ChatInputCommandInteraction, tracks: TracksResult, originalUrl: string): boolean {
-    if (process.env.LOFI_EASTEREGG_ENABLE === "true" && process.env.LOFI_EASTEREGG_IMAGE) {
+  private isEasterEgg(
+    interaction: ChatInputCommandInteraction,
+    tracks: TracksResult,
+    originalUrl: string,
+  ): boolean {
+    if (
+      process.env.LOFI_EASTEREGG_ENABLE === 'true' &&
+      process.env.LOFI_EASTEREGG_IMAGE
+    ) {
       let name = null;
 
       if (tracks.isPlaylist) {
@@ -45,8 +58,9 @@ export default class PlayCommand {
         name = (tracks.result as Music).title.toLowerCase();
       }
 
-      const isLoFi = name.replace(/[\s-]/g, '').indexOf('lofi') !== -1 
-                      && !(new URLSearchParams(originalUrl).has('well'));
+      const isLoFi =
+        name.replace(/[\s-]/g, '').indexOf('lofi') !== -1 &&
+        !new URLSearchParams(originalUrl).has('well');
 
       if (isLoFi) {
         interaction.followUp(process.env.LOFI_EASTEREGG_IMAGE);
@@ -64,7 +78,7 @@ export default class PlayCommand {
     const value = interaction.options.getString('value')!;
 
     try {
-      const provider = this.providers.find(it => it.isUrlValid(value));
+      const provider = this.providers.find((it) => it.isUrlValid(value));
 
       if (!provider) {
         throw new Error(`Não foi possível reproduzir a url informada!`);
@@ -76,14 +90,18 @@ export default class PlayCommand {
         return;
       }
 
-      const items = tracks.isPlaylist 
+      const items = tracks.isPlaylist
         ? (tracks.result as Playlist).items
         : [tracks.result as Music];
 
-      const queue = this.queueManagerService.enqueue(interaction, items, appendNext || false);
+      const queue = this.queueManagerService.enqueue(
+        interaction,
+        items,
+        appendNext || false,
+      );
 
-      const embed  = new EmbedBuilder()
-        .setColor(0xCC8980)
+      const embed = new EmbedBuilder()
+        .setColor(0xcc8980)
         .setTimestamp()
         .setFooter({
           text: `Solicitado por: ${interaction.user.globalName || interaction.user.username}`,
@@ -96,11 +114,18 @@ export default class PlayCommand {
         embed
           .setTitle(playlist.title)
           .setURL(playlist.url)
-          .setDescription(`${playlist.items.length} música(s) adicionada(s) à fila`)
+          .setDescription(
+            `${playlist.items.length} música(s) adicionada(s) à fila`,
+          )
           .addFields(
-            { 
+            {
               name: 'Duração das músicas adicionadas:',
-              value: DateTime.toTime(playlist.items.reduce((total: number, item: Music) => total + item.duration, 0)),
+              value: DateTime.toTime(
+                playlist.items.reduce(
+                  (total: number, item: Music) => total + item.duration,
+                  0,
+                ),
+              ),
             },
             {
               name: 'Duração total da fila:',
@@ -109,14 +134,14 @@ export default class PlayCommand {
             {
               name: 'A reproduzir',
               value: DateTime.toTime(queue.getRemaining()),
-            }
+            },
           );
 
         if (playlist.author) {
           embed.setAuthor({
             name: playlist.author.name,
             url: playlist.author.url || undefined,
-            iconURL: playlist.author.avatar
+            iconURL: playlist.author.avatar,
           });
         }
 
@@ -131,7 +156,7 @@ export default class PlayCommand {
           .setURL(music.url)
           .setDescription('Música adicionada à fila')
           .addFields(
-            { 
+            {
               name: 'Duração da música',
               value: DateTime.toTime(music.duration),
               inline: true,
@@ -141,7 +166,7 @@ export default class PlayCommand {
               value: DateTime.toTime(queue.getDuration()),
               inline: true,
             },
-          )
+          );
 
         if (music.author) {
           embed.setAuthor({
@@ -162,13 +187,14 @@ export default class PlayCommand {
   }
 
   async onInteraction(actionId: string, interaction: ButtonInteraction) {
-    const queue = this.queueManagerService
-                        .getQueue(interaction.member as GuildMember);
+    const queue = this.queueManagerService.getQueue(
+      interaction.member as GuildMember,
+    );
 
     await interaction.update({});
 
     if (queue) {
-      switch(actionId) {
+      switch (actionId) {
         case 'prev':
           queue.prev();
           break;

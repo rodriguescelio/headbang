@@ -1,4 +1,4 @@
-import MusicProvider from "./musicProvider";
+import MusicProvider from './musicProvider';
 
 interface Music {
   provider: MusicProvider;

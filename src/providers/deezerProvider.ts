@@ -1,14 +1,13 @@
-import { Logger, getLogger } from "log4js";
-import { DeezerAlbum, DeezerPlaylist, DeezerTrack, deezer } from "play-dl";
-import Music from "../types/music";
-import { singleton } from "tsyringe";
-import MusicProvider from "../types/musicProvider";
-import TracksResult from "../types/tracksResult";
-import Playlist from "../types/playlist";
+import { Logger, getLogger } from 'log4js';
+import { DeezerAlbum, DeezerPlaylist, DeezerTrack, deezer } from 'play-dl';
+import Music from '../types/music';
+import { singleton } from 'tsyringe';
+import MusicProvider from '../types/musicProvider';
+import TracksResult from '../types/tracksResult';
+import Playlist from '../types/playlist';
 
 @singleton()
 export default class DeezerProvider {
-
   LOG: Logger;
 
   constructor() {
@@ -16,7 +15,9 @@ export default class DeezerProvider {
   }
 
   isUrlValid(url: string): boolean {
-    return url.indexOf('deezer.com') !== -1 || url.indexOf('deezer.page.link') !== -1;
+    return (
+      url.indexOf('deezer.com') !== -1 || url.indexOf('deezer.page.link') !== -1
+    );
   }
 
   private getMusic(track: DeezerTrack): Music {
@@ -63,7 +64,7 @@ export default class DeezerProvider {
             name: data.creator?.name || '',
             url: null,
           },
-          items: data.tracks.map(this.getMusic)
+          items: data.tracks.map(this.getMusic),
         };
 
         if (data.picture) {
@@ -82,9 +83,10 @@ export default class DeezerProvider {
         return { isPlaylist: true, result };
       }
     } catch (e) {
-      this.LOG.error("Erro ao buscar dados no deezer", e);
-      throw new Error(`Ocorreu um erro ao buscar as informações da url: ${url}`);
+      this.LOG.error('Erro ao buscar dados no deezer', e);
+      throw new Error(
+        `Ocorreu um erro ao buscar as informações da url: ${url}`,
+      );
     }
   }
-
 }

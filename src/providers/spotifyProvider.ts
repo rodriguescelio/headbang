@@ -1,18 +1,18 @@
-import { Logger, getLogger } from "log4js";
-import { singleton } from "tsyringe";
-import { parse } from "spotify-uri";
-import axios from "axios";
-import Playlist from "../types/playlist";
-import Music from "../types/music";
-import MusicProvider from "../types/musicProvider";
-import TracksResult from "../types/tracksResult";
+import { Logger, getLogger } from 'log4js';
+import { singleton } from 'tsyringe';
+import { parse } from 'spotify-uri';
+import axios from 'axios';
+import Playlist from '../types/playlist';
+import Music from '../types/music';
+import MusicProvider from '../types/musicProvider';
+import TracksResult from '../types/tracksResult';
 
-const ACCESS_TOKEN_URL = 'https://accounts.spotify.com/api/token?grant_type=client_credentials';
+const ACCESS_TOKEN_URL =
+  'https://accounts.spotify.com/api/token?grant_type=client_credentials';
 const API_URL = 'https://api.spotify.com/v1';
 
 @singleton()
 export default class SpotifyProvider {
-
   LOG: Logger;
   accessToken?: {
     access_token: string;
@@ -41,9 +41,9 @@ export default class SpotifyProvider {
 
   private getBasicToken() {
     const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env;
-    return Buffer
-      .from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)
-      .toString('base64');
+    return Buffer.from(
+      `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`,
+    ).toString('base64');
   }
 
   private async requestToken() {
@@ -53,8 +53,8 @@ export default class SpotifyProvider {
         url: ACCESS_TOKEN_URL,
         headers: {
           Authorization: `Basic ${this.getBasicToken()}`,
-        }
-      }).then(r => r.data);
+        },
+      }).then((r) => r.data);
 
       if (data.access_token) {
         this.accessToken = {
@@ -95,23 +95,24 @@ export default class SpotifyProvider {
 
   private async fetchPlaylist(id: string): Promise<TracksResult> {
     try {
-      const data = await axios.get(
-        `${API_URL}/playlists/${id}`,
-        {
+      const data = await axios
+        .get(`${API_URL}/playlists/${id}`, {
           headers: {
-            Authorization: `Bearer ${this.accessToken?.access_token}`
-          }
-        }
-      ).then(r => r.data);
+            Authorization: `Bearer ${this.accessToken?.access_token}`,
+          },
+        })
+        .then((r) => r.data);
 
       let next = data.tracks.next;
 
       while (!!next) {
-        const tracks = await axios.get(next, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken?.access_token}`,
-          },
-        }).then(r => r.data);
+        const tracks = await axios
+          .get(next, {
+            headers: {
+              Authorization: `Bearer ${this.accessToken?.access_token}`,
+            },
+          })
+          .then((r) => r.data);
 
         data.tracks.items.push(...tracks.items);
 
@@ -142,14 +143,13 @@ export default class SpotifyProvider {
 
   private async fetchTrack(id: string): Promise<TracksResult> {
     try {
-      const data = await axios.get(
-        `${API_URL}/tracks/${id}`,
-        {
+      const data = await axios
+        .get(`${API_URL}/tracks/${id}`, {
           headers: {
-            Authorization: `Bearer ${this.accessToken?.access_token}`
-          }
-        }
-      ).then(r => r.data);
+            Authorization: `Bearer ${this.accessToken?.access_token}`,
+          },
+        })
+        .then((r) => r.data);
 
       return { isPlaylist: false, result: this.getMusic(data) };
     } catch (e) {
@@ -160,14 +160,13 @@ export default class SpotifyProvider {
 
   private async fetchAlbum(id: string): Promise<TracksResult> {
     try {
-      const data = await axios.get(
-        `${API_URL}/albums/${id}`,
-        {
+      const data = await axios
+        .get(`${API_URL}/albums/${id}`, {
           headers: {
-            Authorization: `Bearer ${this.accessToken?.access_token}`
-          }
-        }
-      ).then(r => r.data);
+            Authorization: `Bearer ${this.accessToken?.access_token}`,
+          },
+        })
+        .then((r) => r.data);
 
       const result: Playlist = {
         url: data.external_urls.spotify,
@@ -182,7 +181,7 @@ export default class SpotifyProvider {
 
       if (data.images && data.images.length) {
         result.thumb = data.images[0].url;
-      } 
+      }
 
       return { isPlaylist: true, result };
     } catch (e) {

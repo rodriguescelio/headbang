@@ -1,7 +1,7 @@
-import { Events, Routes } from "discord.js";
-import Headbang from "../headbang";
-import { autoInjectable } from "tsyringe";
-import { Logger, getLogger } from "log4js";
+import { Events, Routes } from 'discord.js';
+import Headbang from '../headbang';
+import { autoInjectable } from 'tsyringe';
+import { Logger, getLogger } from 'log4js';
 
 @autoInjectable()
 export default class ReadyListener {
@@ -19,7 +19,7 @@ export default class ReadyListener {
 
     this.headbang!.client.rest.put(
       Routes.applicationCommands(this.headbang!.client.user!.id),
-      { body: this.headbang?.commands.map(it => it.trigger) }
+      { body: this.headbang?.commands.map((it) => it.trigger) },
     );
 
     this.LOG.info('Headbang está pronto!');

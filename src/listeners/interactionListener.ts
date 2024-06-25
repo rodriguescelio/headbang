@@ -1,6 +1,6 @@
-import { Events, Interaction } from "discord.js";
-import Headbang from "../headbang";
-import { autoInjectable } from "tsyringe";
+import { Events, Interaction } from 'discord.js';
+import Headbang from '../headbang';
+import { autoInjectable } from 'tsyringe';
 
 @autoInjectable()
 export default class InteractionListener {
@@ -11,7 +11,7 @@ export default class InteractionListener {
   async exec(interaction: Interaction) {
     if (interaction.isChatInputCommand()) {
       const command = this.headbang.commands.find(
-        it => it.trigger.name === interaction.commandName
+        (it) => it.trigger.name === interaction.commandName,
       );
       if (command) {
         command.exec(interaction);
@@ -19,12 +19,11 @@ export default class InteractionListener {
     } else if (interaction.isButton()) {
       const args = interaction.customId.split('-');
       const command = this.headbang.commands.find(
-        it => it.trigger.name === args[0]
+        (it) => it.trigger.name === args[0],
       );
       if (command) {
         command.onInteraction(args[1], interaction);
       }
     }
   }
-
 }

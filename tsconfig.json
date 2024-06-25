@@ -5,8 +5,7 @@
   // Most ts-node options can be specified here using their programmatic names.
   "ts-node": {
     "files": true,
-    "compilerOptions": {
-    }
+    "compilerOptions": {}
   },
   "compilerOptions": {
     "target": "ES6",
@@ -15,7 +14,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",

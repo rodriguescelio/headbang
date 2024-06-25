@@ -1,14 +1,14 @@
-import { Logger, getLogger } from "log4js";
-import Music from "../types/music";
-import MusicProvider from "../types/musicProvider";
-import Playlist from "../types/playlist";
-import { singleton } from "tsyringe";
-import ytpl from "ytpl";
-import { getBasicInfo, validateURL } from "ytdl-core";
+import { Logger, getLogger } from 'log4js';
+import Music from '../types/music';
+import MusicProvider from '../types/musicProvider';
+import Playlist from '../types/playlist';
+import { singleton } from 'tsyringe';
+import ytpl from 'ytpl';
+import ytdl, { getBasicInfo, validateURL } from 'ytdl-core';
 import axios from 'axios';
-import DateTime from "../utils/dateTime";
-import { YouTubeStream, stream } from "play-dl";
-import TracksResult from "../types/tracksResult";
+import DateTime from '../utils/dateTime';
+import { YouTubeStream, stream } from 'play-dl';
+import TracksResult from '../types/tracksResult';
 
 const YOUTUBE_URL = 'https://www.youtube.com';
 const WATCH_URL = `${YOUTUBE_URL}/watch?v=`;
@@ -17,7 +17,6 @@ const SEARCH_URL = `${YOUTUBE_URL}/results?sp=EgIQAQ%253D%253D&search_query=`;
 
 @singleton()
 export default class YoutubeProvider {
-
   LOG: Logger;
 
   constructor() {
@@ -42,17 +41,17 @@ export default class YoutubeProvider {
 
     return {
       isPlaylist,
-      url: isPlaylist ? this.getPlaylistUrl(query) : this.getVideoUrl(query) 
+      url: isPlaylist ? this.getPlaylistUrl(query) : this.getVideoUrl(query),
     };
   }
-  
+
   private getBestThumbnail(thumbnails: any[]): string {
     thumbnails.sort((a, b) => b.width - a.width);
     return thumbnails[0].url;
   }
 
   private formatError(e: any): Error {
-      return new Error(e.message.replace('API-Error: ', ''));
+    return new Error(e.message.replace('API-Error: ', ''));
   }
 
   private async fetchPlaylist(url: string): Promise<Playlist> {
@@ -68,7 +67,7 @@ export default class YoutubeProvider {
             name: data.author.name,
             url: data.author.url,
           },
-          items: data.items.map(it => {
+          items: data.items.map((it) => {
             const item: Music = {
               provider: MusicProvider.YOUTUBE,
               title: it.title,
@@ -85,7 +84,7 @@ export default class YoutubeProvider {
             }
 
             return item;
-          }), 
+          }),
         };
 
         if (data.bestThumbnail && data.bestThumbnail.url) {
@@ -127,7 +126,7 @@ export default class YoutubeProvider {
       return result;
     } catch (e) {
       this.LOG.error('Erro ao buscar video', e);
-      throw this.formatError(e); 
+      throw this.formatError(e);
     }
   }
 
@@ -139,31 +138,31 @@ export default class YoutubeProvider {
     const urlData = this.normalizeUrl(url);
     return {
       isPlaylist: urlData.isPlaylist,
-      result: urlData.isPlaylist ? await this.fetchPlaylist(urlData.url) 
+      result: urlData.isPlaylist
+        ? await this.fetchPlaylist(urlData.url)
         : await this.fetchMusic(urlData.url),
     };
   }
 
   async search(text: string): Promise<Music> {
     const url = SEARCH_URL + encodeURIComponent(text);
-    const data = await axios.get(url).then(r => r.data);
+    const data = await axios.get(url).then((r) => r.data);
 
-    const script = data.match(new RegExp('var ytInitialData = (.*?)</script>', 'g'));
+    const script = data.match(
+      new RegExp('var ytInitialData = (.*?)</script>', 'g'),
+    );
 
     if (script.length) {
       const rawJson = script[0].substr(20, script[0].length - 30);
       const json = JSON.parse(rawJson);
 
       try {
-        const { videoRenderer } = json.contents
-        .twoColumnSearchResultsRenderer
-        .primaryContents
-        .sectionListRenderer
-        .contents
-        .find((it: any) => !!it.itemSectionRenderer)
-        .itemSectionRenderer
-        .contents
-        .filter((it: any) => !!it.videoRenderer)[0];
+        const { videoRenderer } =
+          json.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents
+            .find((it: any) => !!it.itemSectionRenderer)
+            .itemSectionRenderer.contents.filter(
+              (it: any) => !!it.videoRenderer,
+            )[0];
 
         const author = videoRenderer.ownerText.runs[0];
 
@@ -174,12 +173,20 @@ export default class YoutubeProvider {
           duration: DateTime.toSeconds(videoRenderer.lengthText.simpleText),
           author: {
             name: author.text,
-            url: YOUTUBE_URL + author.navigationEndpoint.browseEndpoint.canonicalBaseUrl
+            url:
+              YOUTUBE_URL +
+              author.navigationEndpoint.browseEndpoint.canonicalBaseUrl,
           },
         };
 
-        if (videoRenderer.thumbnail && videoRenderer.thumbnail.thumbnails && videoRenderer.thumbnail.thumbnails.length) {
-          videoRenderer.thumbnail.thumbnails.sort((a: any, b: any) => b.width - a.width);
+        if (
+          videoRenderer.thumbnail &&
+          videoRenderer.thumbnail.thumbnails &&
+          videoRenderer.thumbnail.thumbnails.length
+        ) {
+          videoRenderer.thumbnail.thumbnails.sort(
+            (a: any, b: any) => b.width - a.width,
+          );
           result.thumb = videoRenderer.thumbnail.thumbnails[0].url;
         }
 
@@ -192,11 +199,20 @@ export default class YoutubeProvider {
     throw new Error(`Não foi encontrado nenhum vídeo com o texto: ${text}`);
   }
 
-  getStream(url: string): Promise<YouTubeStream> {
+  private getStream(url: string, fn: () => any): any {
     if (validateURL(url)) {
-      return stream(url) as Promise<YouTubeStream>;
-    } 
+      try {
+        return fn();
+      } catch (e) {}
+    }
     throw new Error(`Não foi possível encontrar o stream da url: ${url}`);
   }
-}
 
+  getStreamPlayDl(url: string): Promise<YouTubeStream> {
+    return this.getStream(url, () => stream(url)) as Promise<YouTubeStream>;
+  }
+
+  getStreamYtDl(url: string): any {
+    return this.getStream(url, () => ytdl(url, { filter: 'audioonly' }));
+  }
+}

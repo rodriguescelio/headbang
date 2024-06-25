@@ -1,5 +1,5 @@
-import { Client, GatewayIntentBits } from "discord.js";
-import { singleton } from "tsyringe";
+import { Client, GatewayIntentBits } from 'discord.js';
+import { singleton } from 'tsyringe';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -15,10 +15,7 @@ export default class Headbang {
 
   constructor() {
     this.client = new Client({
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates
-      ]
+      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
     });
 
     this.listenersDir = join(__dirname, 'listeners');
@@ -29,9 +26,9 @@ export default class Headbang {
     const classFile = await import(join(dir, file));
     return new classFile.default();
   }
-  
+
   private async loadListeners() {
-    for await (const file of (await readdir(this.listenersDir))) {
+    for await (const file of await readdir(this.listenersDir)) {
       const listener = await this.newInstance(this.listenersDir, file);
 
       if (listener.once) {
@@ -45,7 +42,7 @@ export default class Headbang {
   }
 
   private async loadCommands() {
-    for await (const file of (await readdir(this.commandsDir))) {
+    for await (const file of await readdir(this.commandsDir)) {
       this.commands.push(await this.newInstance(this.commandsDir, file));
     }
   }
@@ -59,4 +56,3 @@ export default class Headbang {
     this.client.login(process.env.DISCORD_BOT_TOKEN);
   }
 }
-

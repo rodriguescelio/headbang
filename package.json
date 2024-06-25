@@ -1,8 +1,10 @@
 {
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "lint": "prettier . --write"
   },
   "devDependencies": {
+    "prettier": "^3.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
