@@ -7,8 +7,9 @@ import ytpl from 'ytpl';
 import ytdl, { getBasicInfo, validateURL } from 'ytdl-core';
 import axios from 'axios';
 import DateTime from '../utils/dateTime';
-import { YouTubeStream, stream } from 'play-dl';
+import { YouTubeStream, stream as playDlStream } from 'play-dl';
 import TracksResult from '../types/tracksResult';
+import { stream as ytStream } from 'yt-stream';
 
 const YOUTUBE_URL = 'https://www.youtube.com';
 const WATCH_URL = `${YOUTUBE_URL}/watch?v=`;
@@ -209,10 +210,23 @@ export default class YoutubeProvider {
   }
 
   getStreamPlayDl(url: string): Promise<YouTubeStream> {
-    return this.getStream(url, () => stream(url)) as Promise<YouTubeStream>;
+    return this.getStream(url, () =>
+      playDlStream(url),
+    ) as Promise<YouTubeStream>;
   }
 
   getStreamYtDl(url: string): any {
     return this.getStream(url, () => ytdl(url, { filter: 'audioonly' }));
+  }
+
+  getStreamYtStream(url: string): any {
+    return this.getStream(url, () =>
+      ytStream(url, {
+        quality: 'high',
+        type: 'audio',
+        highWaterMark: 1048576 * 32,
+        download: true,
+      }),
+    );
   }
 }

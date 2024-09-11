@@ -14,7 +14,6 @@ import {
   AudioPlayer,
   AudioPlayerStatus,
   NoSubscriberBehavior,
-  StreamType,
   VoiceConnection,
   VoiceConnectionStatus,
   createAudioPlayer,
@@ -260,7 +259,7 @@ export default class GuildQueueService extends EventEmmiter {
       }
 
       embed
-        .setTitle(item.youtubeMusic!.title)
+        .setTitle(item.youtubeMusic ? item.youtubeMusic.title : '')
         .setDescription(`Artista: ${item.youtubeMusic!.author.name}`)
         .setURL(item.youtubeMusic!.url)
         .addFields(
@@ -323,6 +322,10 @@ export default class GuildQueueService extends EventEmmiter {
     }
   }
 
+  private createResourceFrom(audio: any) {
+    return createAudioResource(audio.stream, { inputType: audio.type });
+  }
+
   private async play() {
     const item = this.musics[this.currentMusicIndex];
 
@@ -347,15 +350,18 @@ export default class GuildQueueService extends EventEmmiter {
             this.youtubeProvider!.getStreamYtDl(item.youtubeMusic.url),
           );
           break;
+        case 'yt-stream':
+          resource = this.createResourceFrom(
+            await this.youtubeProvider!.getStreamYtStream(
+              item.youtubeMusic.url,
+            ),
+          );
+          break;
         case 'play-dl':
         default:
-          const audio = await this.youtubeProvider!.getStreamPlayDl(
-            item.youtubeMusic.url,
+          resource = this.createResourceFrom(
+            await this.youtubeProvider!.getStreamPlayDl(item.youtubeMusic.url),
           );
-
-          resource = createAudioResource(audio.stream, {
-            inputType: audio.type,
-          });
           break;
       }
 
